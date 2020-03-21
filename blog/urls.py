@@ -1,9 +1,16 @@
 from django.contrib import admin
 from django.urls import path
 from . import views
+from django.contrib.sitemaps.views import sitemap
+from .sitemap import PostSitemap
 
 
 app_name = "blog"
+
+sitemaps = {
+    'posts': PostSitemap,
+}
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
