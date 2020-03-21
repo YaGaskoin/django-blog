@@ -4,15 +4,16 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
 from .forms import EmailPostForm, CommentForm
 from django.core.mail import send_mail
+from taggit.models import Tag
 # Create your views here.
 
 
-class PostListView(ListView):
-    """Представление через класс"""
-    queryset = Post.objects.filter(status="published").all()
-    context_object_name = 'posts'
-    paginate_by = 3
-    template_name = 'blog/post/list.html'
+# class PostListView(ListView):
+#     """Представление через класс"""
+#     queryset = Post.objects.filter(status="published").all()
+#     context_object_name = 'posts'
+#     paginate_by = 3
+#     template_name = 'blog/post/list.html'
 
 
 def post_share(request, post_id):
@@ -34,19 +35,25 @@ def post_share(request, post_id):
 
 
 """Представление через функцию"""
-# def post_list(request):
-#     object_list = Post.objects.filter(status="published").all()
-#     paginator = Paginator(object_list, 3)  # 3 поста на каждой странице
-#     page = request.GET.get('page')
-#     try:
-#         posts = paginator.page(page)
-#     except PageNotAnInteger:
-#         # Если страница не является целым числом, поставим первую страницу
-#         posts = paginator.page(1)
-#     except EmptyPage:
-#         # Если страница больше максимальной, доставить последнюю страницу результатов
-#         posts = paginator.page(paginator.num_pages)
-#     return render(request, 'blog/post/list.html', {'page': page, 'posts': posts})
+def post_list(request, tag_slug=None):
+    object_list = Post.objects.filter(status="published").all()
+    tag = None
+
+    if tag_slug:
+        tag = get_object_or_404(Tag, slug=tag_slug)
+        object_list = object_list.filter(tag__in=[tag])
+
+    paginator = Paginator(object_list, 3)  # 3 поста на каждой странице
+    page = request.GET.get('page')
+    try:
+        posts = paginator.page(page)
+    except PageNotAnInteger:
+        # Если страница не является целым числом, поставим первую страницу
+        posts = paginator.page(1)
+    except EmptyPage:
+        # Если страница больше максимальной, доставить последнюю страницу результатов
+        posts = paginator.page(paginator.num_pages)
+    return render(request, 'blog/post/list.html', {'page': page, 'posts': posts, 'tag': tag})
 
 
 def post_detail(request, year, month, day, post):
